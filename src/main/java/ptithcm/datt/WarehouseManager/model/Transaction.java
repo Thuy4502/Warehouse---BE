@@ -45,6 +45,9 @@ public class Transaction {
     @Column(name="transaction_code")
     private String transactionCode;
 
+    @Column(name="deliver_person")
+    private String deliveryPerson;
+
     @ManyToOne
     @JoinColumn(name="staff_id")
     private Staff staff;

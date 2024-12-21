@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ptithcm.datt.WarehouseManager.model.Book;
-import ptithcm.datt.WarehouseManager.model.TransactionRequestItem;
 
 import java.util.Set;
 

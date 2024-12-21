@@ -27,7 +27,8 @@ public class TransactionItem {
 
     private Double price;
     private String note;
-    @Column(name="start_qty")
+
+    @Column(name = "start_qty")
     private int startQty;
 
     @ManyToOne
@@ -38,4 +39,8 @@ public class TransactionItem {
     @ManyToOne
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "transactionItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private InventoryLog inventoryLog; // Quan hệ với InventoryLog
 }

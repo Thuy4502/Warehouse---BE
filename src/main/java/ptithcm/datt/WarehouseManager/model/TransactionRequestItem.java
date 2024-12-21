@@ -18,8 +18,8 @@ public class TransactionRequestItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private int quantity;
+    private int requestQuantity;
+    private int acceptQuantity;
     private Double price;
     private String note;
 

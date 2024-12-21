@@ -25,7 +25,7 @@ public class Staff {
     private String address;
     private String email;
     @Column(name="phone_number")
-    private String phone_number;
+    private String phoneNumber;
     private Date dob;
     @Column(name="hired_date")
     private LocalDateTime hiredDate;

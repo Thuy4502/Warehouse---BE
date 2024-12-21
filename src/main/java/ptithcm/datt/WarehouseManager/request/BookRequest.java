@@ -24,8 +24,9 @@ public class BookRequest {
     private Double price;
     private int quantity;
     private String status;
-    private Long categoryId;
+    private List<Long> categoryIds;
     private Long staffId;
     private Long publisherId;
-    private List<Long> authorId;
+    private List<Long> authorIds;
+    private String ISBN;
 }

@@ -30,7 +30,6 @@ public class Supplier {
 
     @Column(name="phone_number")
     private String phoneNumber;
-    private String image;
 
     @JsonIgnore
     @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)

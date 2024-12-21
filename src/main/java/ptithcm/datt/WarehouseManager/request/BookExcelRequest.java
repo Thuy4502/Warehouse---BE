@@ -24,8 +24,9 @@ public class BookExcelRequest {
     private Double price;
     private int quantity;
     private String status;
-    private String categoryName;
+    private List<String> categoryNames;
     private Long staffId;
     private String publisherName;
     private List<String> authorName;
+    private String ISBN;
 }

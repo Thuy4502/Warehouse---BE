@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -25,7 +25,6 @@ public class Category {
 
     @Column(name="category_name")
     private String categoryName;
-
     private String description;
 
     @Column(name="update_at")
@@ -33,14 +32,9 @@ public class Category {
 
     @JsonIgnore
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    private List<Book> books;
+    private Set<CategoryBook> categoryBooks;
 
     @ManyToOne
     @JoinColumn(name="staff_id")
     private Staff staff;
-
-
-
-
-
 }

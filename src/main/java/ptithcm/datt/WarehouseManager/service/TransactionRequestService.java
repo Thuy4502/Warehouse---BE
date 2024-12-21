@@ -37,6 +37,7 @@ public class TransactionRequestService {
         }
         return null;
     }
+
     public TransactionRequest createTransactionRequest(TransactionRequestDTO transactionRequestDTO) {
         TransactionRequest createdTransactionRequest = new TransactionRequest();
         createdTransactionRequest.setCreateBy(transactionRequestDTO.getCreateBy());
@@ -47,7 +48,7 @@ public class TransactionRequestService {
         createdTransactionRequest.setTotalValue(transactionRequestDTO.getTotalValue());
         createdTransactionRequest.setTransactionRequestCode(transactionRequestDTO.getTransactionRequestCode());
         createdTransactionRequest.setCreateAt(LocalDateTime.now());
-        createdTransactionRequest.setStatus("CREATED");
+        createdTransactionRequest.setStatus("Chưa duyệt");
         Staff staff = staffRepository.findById(transactionRequestDTO.getStaffId())
                 .orElseThrow(() -> new RuntimeException("Staff not found"));
         createdTransactionRequest.setStaff(staff);
@@ -55,6 +56,14 @@ public class TransactionRequestService {
         Type type = typeRepository.findByTypeName(transactionRequestDTO.getType())
                 .orElseThrow(() -> new RuntimeException("Type not found"));
         createdTransactionRequest.setType(type);
+        if (createdTransactionRequest.getType().equals("Nhập")) {
+
+            createdTransactionRequest.setTransactionRequestCode(generateImportRequestTransactionCode());
+        }
+        else {
+            createdTransactionRequest.setTransactionRequestCode(generateExportRequestTransactionCode());
+
+        }
 
         Set<TransactionRequestItem> transactionRequestItems = new HashSet<>();
         for (TransactionRequestItemRequest itemDTO : transactionRequestDTO.getTransactionRequestItems()) {
@@ -62,7 +71,7 @@ public class TransactionRequestService {
             Book book = bookRepository.findById(itemDTO.getBookId())
                     .orElseThrow(() -> new RuntimeException("Book not found"));
             item.setBook(book);
-            item.setQuantity(itemDTO.getQuantity());
+            item.setRequestQuantity(itemDTO.getQuantity());
             item.setPrice(itemDTO.getPrice());
             item.setTransactionRequest(createdTransactionRequest);
             transactionRequestItems.add(item);
@@ -70,6 +79,29 @@ public class TransactionRequestService {
 
         createdTransactionRequest.setTransactionRequestItems(transactionRequestItems);
         return transactionRequestRepository.save(createdTransactionRequest);
+    }
+
+    @Transactional
+    public TransactionRequest approveTransactionReQuest(Long id, Long staffId) {
+        TransactionRequest existingTransactionRequest = transactionRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction request not found"));
+        existingTransactionRequest.setStatus("Đã duyệt");
+
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff request not found"));
+
+        existingTransactionRequest.setStaffUpdate(staff);
+
+        existingTransactionRequest.setStatus("Đã duyệt");
+        return transactionRequestRepository.save(existingTransactionRequest);
+    }
+
+    @Transactional
+    public TransactionRequest rejectTransactionReQuest(Long id) {
+        TransactionRequest existingTransactionRequest = transactionRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction request not found"));
+        existingTransactionRequest.setStatus("Đã hủy");
+        return transactionRequestRepository.save(existingTransactionRequest);
     }
 
     @Transactional
@@ -91,9 +123,9 @@ public class TransactionRequestService {
             }
         }
 
-        if (transactionRequestDTO.getStatus() != null &&
-                !transactionRequestDTO.getStatus().equals(existingTransactionRequest.getStatus())) {
-            existingTransactionRequest.setStatus(transactionRequestDTO.getStatus());
+        if (transactionRequestDTO.getPhoneNumber() != null &&
+                !transactionRequestDTO.getPhoneNumber().equals(existingTransactionRequest.getPhoneNumber())) {
+            existingTransactionRequest.setPhoneNumber(transactionRequestDTO.getPhoneNumber());
         }
 
         if (transactionRequestDTO.getReason() != null &&
@@ -125,8 +157,8 @@ public class TransactionRequestService {
             TransactionRequestItem item;
             if (existingItemOptional.isPresent()) {
                 item = existingItemOptional.get();
-                if (item.getQuantity() != itemDTO.getQuantity()) {
-                    item.setQuantity(itemDTO.getQuantity());
+                if (item.getRequestQuantity() != itemDTO.getQuantity()) {
+                    item.setAcceptQuantity(itemDTO.getQuantity());
                 }
                 if (!item.getPrice().equals(itemDTO.getPrice())) {
                     item.setPrice(itemDTO.getPrice());
@@ -136,11 +168,18 @@ public class TransactionRequestService {
                 Book book = bookRepository.findById(itemDTO.getBookId())
                         .orElseThrow(() -> new RuntimeException("Book not found"));
                 item.setBook(book);
-                item.setQuantity(itemDTO.getQuantity());
+                item.setAcceptQuantity(itemDTO.getQuantity());
                 item.setPrice(itemDTO.getPrice());
                 item.setTransactionRequest(existingTransactionRequest);
             }
+
             updatedTransactionRequestItems.add(item);
+        }
+
+        if (transactionRequestDTO.getTotalValue() != null &&
+                !transactionRequestDTO.getTotalValue().equals(existingTransactionRequest.getTotalValue())) {
+            existingTransactionRequest.setTotalValue(transactionRequestDTO.getTotalValue());
+
         }
 
         existingTransactionRequest.getTransactionRequestItems().clear();
@@ -148,6 +187,58 @@ public class TransactionRequestService {
 
         return transactionRequestRepository.save(existingTransactionRequest);
     }
+
+    private String generateImportRequestTransactionCode() {
+        String currentYear = String.valueOf(java.time.Year.now().getValue()).substring(2);
+        String prefix = "PYCN" + currentYear;
+
+        List<TransactionRequest> transactions = transactionRequestRepository.findAll();
+        int maxId = 0;
+
+        for (TransactionRequest p : transactions) {
+            String transactionCode = p.getTransactionRequestCode();
+            if (transactionCode.startsWith(prefix)) {
+                try {
+                    String idStr = transactionCode.substring(prefix.length());
+                    int id = Integer.parseInt(idStr);
+                    if (id > maxId) {
+                        maxId = id;
+                    }
+                } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+                    System.err.println("Invalid transaction code format: " + transactionCode);
+                }
+            }
+        }
+
+        return String.format("%s%04d", prefix, maxId + 1);
+    }
+
+    private String generateExportRequestTransactionCode() {
+        String currentYear = String.valueOf(java.time.Year.now().getValue()).substring(2); // Lấy 2 số cuối của năm
+        String prefix = "PYCX" + currentYear;
+        List<TransactionRequest> transactions = transactionRequestRepository.findAll();
+        int maxId = 0;
+
+        for (TransactionRequest p : transactions) {
+            String transactionCode = p.getTransactionRequestCode();
+            if (transactionCode.startsWith(prefix)) {
+                try {
+                    String idStr = transactionCode.substring(prefix.length());
+                    int id = Integer.parseInt(idStr);
+                    if (id > maxId) {
+                        maxId = id;
+                    }
+                } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+                    System.err.println("Invalid transaction code format: " + transactionCode);
+                }
+            }
+        }
+
+        return String.format("%s%04d", prefix, maxId + 1);
+    }
+
+
+
 
 
 

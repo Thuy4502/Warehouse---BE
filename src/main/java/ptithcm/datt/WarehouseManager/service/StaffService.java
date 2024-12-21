@@ -34,7 +34,7 @@ public class StaffService {
                 .orElseThrow(() -> new RuntimeException("Staff not found"));
 
         Account account = accountRepository.findByStaff(existingStaff)
-                .orElseThrow(() -> new RuntimeException("Staff not found"));
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
         if(staffRequest.getIsEnable() == false) {
             account.setStatus("inactive");
@@ -48,24 +48,23 @@ public class StaffService {
             existingStaff.setStaffName(staffRequest.getStaffName());
         }
 
-
-        if(staffRequest.getAddress() != null && !existingStaff.getAddress().equals(existingStaff.getAddress())) {
+        if (staffRequest.getAddress() != null && !staffRequest.getAddress().equals(existingStaff.getAddress())) {
             existingStaff.setAddress(staffRequest.getAddress());
+        }
+
+        if (staffRequest.getPhoneNumber() != null && !staffRequest.getPhoneNumber().equals(existingStaff.getPhoneNumber())) {
+            existingStaff.setPhoneNumber(staffRequest.getPhoneNumber());
         }
 
         if(staffRequest.getEmail() != null && !existingStaff.getEmail().equals(existingStaff.getEmail())) {
             existingStaff.setEmail(staffRequest.getEmail());
         }
 
-        if(staffRequest.getPhone_number() != null && !existingStaff.getPhone_number().equals(existingStaff.getPhone_number())) {
-            existingStaff.setPhone_number(staffRequest.getPhone_number());
-        }
-
         if(staffRequest.getDob() != null && !existingStaff.getDob().equals(existingStaff.getDob())) {
             existingStaff.setDob(staffRequest.getDob());
         }
 
-        if(staffRequest.getImg() != null && !existingStaff.getImg().equals(existingStaff.getImg())) {
+        if (staffRequest.getImg() != null) {
             existingStaff.setImg(staffRequest.getImg());
         }
 
@@ -74,6 +73,35 @@ public class StaffService {
         }
 
         return staffRepository.save(existingStaff);
+    }
+
+    public Staff changeStaffStatus(Long staffId, Staff staffRequest) {
+        Staff existingStaff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        Account account = accountRepository.findByStaff(existingStaff)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        if(staffRequest.getIsEnable() == false) {
+            account.setStatus("inactive");
+            accountRepository.save(account);
+        }
+        else {
+            account.setStatus("active");
+            accountRepository.save(account);
+        }
+        if (staffRequest.getIsEnable() != null && !staffRequest.getIsEnable().equals(existingStaff.getIsEnable())) {
+            existingStaff.setIsEnable(staffRequest.getIsEnable());
+        }
+        return staffRepository.save(existingStaff);
+    }
+
+    public boolean checkEmailExist(String email) {
+        Staff user = staffRepository.findByEmail(email);
+        if(user != null){
+            return true;
+        }
+        return false;
     }
 
 

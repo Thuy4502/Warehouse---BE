@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -14,7 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class TransactionReq {
-    private Long transactionId;
+//    private Long transactionId;
     private String businessPartner;
     private String address;
     private String phone_number;
@@ -26,7 +25,8 @@ public class TransactionReq {
     private Long staffId;
     private Long updateBy;
     private Long transactionRequestId;
-    private Long billId;
+    private String billCode;
     private Set<TransactionItemRequest> transactionItems;
-    private String Type;
+    private String type;
+    private String deliveryPerson;
 }

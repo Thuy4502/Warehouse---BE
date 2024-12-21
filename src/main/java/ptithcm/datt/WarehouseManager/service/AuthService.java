@@ -1,42 +1,46 @@
 package ptithcm.datt.WarehouseManager.service;
 
-import com.google.api.client.util.DateTime;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.mail.MessagingException;
-import jdk.jshell.spi.ExecutionControl;
+import jakarta.transaction.Transactional;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ptithcm.datt.WarehouseManager.config.SecurityConfig;
-import ptithcm.datt.WarehouseManager.dto.request.AccountRequest;
-import ptithcm.datt.WarehouseManager.dto.request.AuthenticationRequest;
-import ptithcm.datt.WarehouseManager.dto.request.IntrospectRequest;
-import ptithcm.datt.WarehouseManager.dto.request.StaffRequest;
-import ptithcm.datt.WarehouseManager.dto.response.AuthenticationResponse;
-import ptithcm.datt.WarehouseManager.dto.response.IntrospectResponse;
+import ptithcm.datt.WarehouseManager.repository.StaffRepository;
+import ptithcm.datt.WarehouseManager.request.AccountRequest;
+import ptithcm.datt.WarehouseManager.request.AuthenticationRequest;
+import ptithcm.datt.WarehouseManager.request.IntrospectRequest;
+import ptithcm.datt.WarehouseManager.request.StaffRequest;
+import ptithcm.datt.WarehouseManager.response.AuthenticationResponse;
+import ptithcm.datt.WarehouseManager.response.IntrospectResponse;
 import ptithcm.datt.WarehouseManager.model.Account;
 import ptithcm.datt.WarehouseManager.model.Role;
 import ptithcm.datt.WarehouseManager.model.Staff;
 import ptithcm.datt.WarehouseManager.repository.AccountRepository;
 import ptithcm.datt.WarehouseManager.repository.RoleRepository;
-import ptithcm.datt.WarehouseManager.request.ChangePasswordRequest;
 
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -51,11 +55,14 @@ public class AuthService {
     @Autowired
     RoleRepository roleRepository;
     @Autowired
+    StaffRepository staffRepository;
+    @Autowired
     StaffService staffService;
     @Autowired
     SecurityConfig securityConfig;
+    UserDetails userDetails;
 
-    private String generateRandomPassword() {
+    public String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();
         StringBuilder password = new StringBuilder(6);
@@ -86,6 +93,7 @@ public class AuthService {
     }
 
 
+
     public List<Account> addStaff(List<StaffRequest> staffRequests) throws MessagingException {
         List<Account> accounts = new ArrayList<>();
 
@@ -105,7 +113,7 @@ public class AuthService {
 
             Staff newStaff = new Staff();
             newStaff.setStaffName(staffRequest.getStaffName());
-            newStaff.setPhone_number(staffRequest.getPhoneNumber());
+            newStaff.setPhoneNumber(staffRequest.getPhoneNumber());
             newStaff.setEmail(staffRequest.getEmail());
             newStaff.setImg(staffRequest.getPicture());
             newStaff.setAddress(staffRequest.getAddress());
@@ -170,40 +178,75 @@ public class AuthService {
     }
 
 
-
-
     public AuthenticationResponse authenticate(AuthenticationRequest request) throws Exception {
         Account account = accountRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + request.getUsername()));
 
-        passwordEncoder = new BCryptPasswordEncoder(10);
-        boolean autheticated =  passwordEncoder.matches(request.getPassword(), account.getPassword());
-        if(!autheticated) {
-            throw new Exception("Unauthenticated");
+        // Sử dụng PasswordEncoder để kiểm tra mật khẩu
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), account.getPassword());
+
+        if (!authenticated) {
+            throw new BadCredentialsException("Mật khẩu không chính xác");
         }
-        String token = generateToken(request.getUsername());
+
+        // Lấy danh sách quyền của người dùng từ cơ sở dữ liệu
+        List<GrantedAuthority> authorities = getAuthoritiesForUser(account.getUsername());
+
+        // Tạo UserDetails từ account và authorities
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                account.getUsername(),
+                account.getPassword(),
+                authorities // Chuyển authorities vào UserDetails
+        );
+
+        // Tạo Authentication object với userDetails đã được khởi tạo
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Tạo JWT token
+        String token = generateToken(request.getUsername(), authentication);
+
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(true)
                 .build();
-
     }
 
-    private String generateToken(String username) throws JOSEException {
+
+    private List<GrantedAuthority> getAuthoritiesForUser(String username) {
+        List<Role> roles = roleRepository.findByAccounts_Username(username);
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        for (Role role : roles) {
+            System.out.println("Danh sách quyền: " + role.getRoleName()); // Print the role name or any relevant property
+        }
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getRoleName()));
+        }
+
+        return authorities;
+    }
+
+    private String generateToken(String username, Authentication auth) throws JOSEException {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        String authoritiesString = populateAuthorities(authorities);
+
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(username)
                 .issuer("datn.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(1, ChronoUnit.DAYS).toEpochMilli()
                 ))
                 .claim("username", username)
-
-
+                .claim("authorities", authoritiesString)
                 .build();
+
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
+
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
@@ -211,6 +254,15 @@ public class AuthService {
             System.err.println("Cannot create token: " + e.getMessage());
             throw new RuntimeException("Cannot create token", e);
         }
+    }
+
+    // Phương thức chuyển đổi danh sách quyền thành chuỗi
+    public String populateAuthorities(Collection<? extends GrantedAuthority> collection) {
+        Set<String> auths = new HashSet<>();
+        for (GrantedAuthority authority : collection) {
+            auths.add(authority.getAuthority());
+        }
+        return String.join(",", auths);
     }
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
@@ -228,6 +280,11 @@ public class AuthService {
     public void sendMail(String email, String subject, String content) throws MessagingException {
         emailService.sendMail(email, subject, content);
     }
+
+    public boolean checkIfAccountExists(String username) {
+        return accountRepository.existsByUsername(username);
+    }
+
 
 
 }
