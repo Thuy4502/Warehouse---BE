@@ -21,6 +21,7 @@ public class WHKTransactionRequestController {
 
     @GetMapping("/getAll/{type}")
     public ResponseEntity<EntityResponse> getAllTransactionRequest(@PathVariable String type) {
+        System.out.println("getAllTransactionRequest run...");
         List<TransactionRequest> transactionRequestList = transactionRequestService.getAllTransactionRequestByType(type);
         EntityResponse<List<TransactionRequest>> response = new EntityResponse<>();
         response.setData(transactionRequestList);
@@ -32,7 +33,7 @@ public class WHKTransactionRequestController {
 
     @PostMapping("/create")
     public ResponseEntity<EntityResponse> addTransactionRequest(@RequestBody TransactionRequestDTO transactionRequestDTO) {
-
+        System.out.println("addTransactionRequest run...");
         try {
             TransactionRequest result = transactionRequestService.createTransactionRequest(transactionRequestDTO);
             EntityResponse<TransactionRequest> response = new EntityResponse<>();

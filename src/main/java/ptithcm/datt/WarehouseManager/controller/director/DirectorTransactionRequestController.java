@@ -1,4 +1,4 @@
-package ptithcm.datt.WarehouseManager.controller.admin;
+package ptithcm.datt.WarehouseManager.controller.director;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +11,7 @@ import ptithcm.datt.WarehouseManager.service.TransactionRequestService;
 
 @RestController
 @RequestMapping("/v1/admin/transaction_request")
-public class AdminTransactionRequestController {
+public class DirectorTransactionRequestController {
 
     @Autowired
     private TransactionRequestService transactionRequestService;

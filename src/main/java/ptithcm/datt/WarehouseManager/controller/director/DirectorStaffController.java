@@ -1,4 +1,4 @@
-package ptithcm.datt.WarehouseManager.controller.admin;
+package ptithcm.datt.WarehouseManager.controller.director;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("v1/admin/staff")
-public class AdminStaffController {
+public class DirectorStaffController {
     @Autowired
     private StaffService staffService;
 

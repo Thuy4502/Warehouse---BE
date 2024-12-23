@@ -32,7 +32,7 @@ public class WHKTransactionController {
         } catch (Exception e) {
             EntityResponse<TransactionRequest> response = new EntityResponse<>();
             response.setData(null);
-            response.setMessage("Error creating transaction: " + e.getMessage());
+            response.setMessage("Lỗi tạo phiếu: " + e.getMessage());
             response.setCode(HttpStatus.BAD_REQUEST.value());
             response.setStatus(HttpStatus.BAD_REQUEST);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -53,7 +53,7 @@ public class WHKTransactionController {
             response.setStatus(HttpStatus.CREATED);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (EntityNotFoundException e) {
-            logger.error("EntityNotFoundException: " + e.getMessage(), e); // Ghi log chi tiết lỗi EntityNotFoundException
+            logger.error("EntityNotFoundException: " + e.getMessage(), e);
             EntityResponse<TransactionRequest> response = new EntityResponse<>();
             response.setData(null);
             response.setMessage("Error updating transaction: " + e.getMessage());
@@ -61,7 +61,7 @@ public class WHKTransactionController {
             response.setStatus(HttpStatus.NOT_FOUND);
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (RuntimeException e) {
-            logger.error("RuntimeException: " + e.getMessage(), e); // Ghi log chi tiết lỗi RuntimeException
+            logger.error("RuntimeException: " + e.getMessage(), e);
             EntityResponse<TransactionRequest> response = new EntityResponse<>();
             response.setData(null);
             response.setMessage("Error updating transaction: " + e.getMessage());
@@ -69,7 +69,7 @@ public class WHKTransactionController {
             response.setStatus(HttpStatus.BAD_REQUEST);
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            logger.error("Exception: " + e.getMessage(), e); // Ghi log chi tiết lỗi chung
+            logger.error("Exception: " + e.getMessage(), e);
             EntityResponse<TransactionRequest> response = new EntityResponse<>();
             response.setData(null);
             response.setMessage("Unexpected error: " + e.getMessage());

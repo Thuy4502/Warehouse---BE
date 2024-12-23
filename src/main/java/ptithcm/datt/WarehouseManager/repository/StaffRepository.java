@@ -12,6 +12,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Query("SELECT s FROM Staff s WHERE s.staffId = (SELECT a.staff.staffId FROM Account a WHERE a.accountId = :accountId)")
     Staff findStaffByUserId(@Param("accountId") Long accountId);
     Staff findByEmail(@Param("email") String email);
+    boolean existsByEmail(String email);
 
 }
 

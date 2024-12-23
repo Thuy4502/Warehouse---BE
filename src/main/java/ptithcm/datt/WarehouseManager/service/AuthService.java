@@ -101,6 +101,10 @@ public class AuthService {
             Role role = roleRepository.findByRoleName(staffRequest.getRoleName())
                     .orElseThrow(() -> new RuntimeException("Role not found"));
 
+            if (accountRepository.existsByEmail(staffRequest.getEmail())) {
+                throw new RuntimeException("Email đã tồn tại trên hệ thống: " + staffRequest.getEmail());
+            }
+
             Account account = new Account();
             account.setCreateAt(LocalDateTime.now());
             account.setUsername(staffRequest.getUsername());

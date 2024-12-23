@@ -107,7 +107,7 @@ public class TransactionService {
                 book.setQuantity(currentQuantity + transactionItemRequest.getActualQuantity());
             } else if (transactionRequest.getType().equals("Xuất")) {
                 if (currentQuantity < transactionItemRequest.getActualQuantity()) {
-                    throw new RuntimeException("Not enough stock for book: " + book.getTitle());
+                    throw new RuntimeException("Sách " + book.getBookName() + " không còn đủ số lượng để xuất, số lượng tồn hiện tại là: " + book.getQuantity());
                 }
                 book.setQuantity(currentQuantity - transactionItemRequest.getActualQuantity());
             }
