@@ -1,4 +1,4 @@
-package ptithcm.datt.WarehouseManager.controller.stockdepartment;
+package ptithcm.datt.WarehouseManager.controller.common;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,7 @@ import ptithcm.datt.WarehouseManager.service.TransactionService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/stockdepartment/transaction")
+@RequestMapping("/v1/api/transaction")
 public class TransactionController {
     @Autowired
     private TransactionService transactionService;

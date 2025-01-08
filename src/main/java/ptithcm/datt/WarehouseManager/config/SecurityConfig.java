@@ -57,10 +57,6 @@ public class SecurityConfig {
                         .requestMatchers("/v1/staff/**").hasAnyAuthority(RoleName.STAFF.getRoleName(), RoleName.WAREHOUSE.getRoleName())
                         .requestMatchers("/v1/salesperson/**").hasAnyAuthority(RoleName.SALE.getRoleName(), RoleName.WAREHOUSE.getRoleName())
                         .requestMatchers("/v1/warehousekeeper/**").hasAuthority(RoleName.WAREHOUSE.getRoleName())
-                        .requestMatchers("/v1/stockdepartment/**").hasAnyAuthority(
-                                RoleName.ADMIN.getRoleName(),
-                                RoleName.STAFF.getRoleName(),
-                                RoleName.WAREHOUSE.getRoleName())
                         .and()
                         .addFilterBefore(new JwtTokenValidator(), UsernamePasswordAuthenticationFilter.class)
                 );

@@ -1,12 +1,9 @@
-package ptithcm.datt.WarehouseManager.controller.stockdepartment;
+package ptithcm.datt.WarehouseManager.controller.common;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ptithcm.datt.WarehouseManager.model.Book;
-import ptithcm.datt.WarehouseManager.model.InventoryLog;
-import ptithcm.datt.WarehouseManager.model.Transaction;
 import ptithcm.datt.WarehouseManager.response.EntityResponse;
 import ptithcm.datt.WarehouseManager.response.InventoryLogResponse;
 import ptithcm.datt.WarehouseManager.response.InventoryResponse;
@@ -15,7 +12,7 @@ import ptithcm.datt.WarehouseManager.service.InventoryLogService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/stockdepartment/inventory_log")
+@RequestMapping("/v1/api/inventory_log")
 public class InventoryLogController {
     @Autowired
     InventoryLogService inventoryLogService;
